@@ -358,9 +358,31 @@ func (m *modInfo) getPlugin(moduleRoot string) (*pulumirpc.PluginDependency, err
 	return plugin, nil
 }
 
+// Finds the directory in the project that contains the go.mod file.
+// If the go.mod file is not found, then the current working directory is returned.
+// as per previous behavior. Detection falls back to using the stack version when this happens?
+func findGoMod(dir string) (string, error) {
+	for {
+		_, err := os.Stat(filepath.Join(dir, "go.mod"))
+		if err == nil {
+			return dir, nil
+		}
+		if !os.IsNotExist(err) {
+			return "", err
+		}
+		parentDir := filepath.Dir(dir)
+		if parentDir == dir {
+			break
+		}
+		dir = parentDir
+	}
+	return dir, nil
+}
+
 // Reads and parses the go.mod file from the current working directory.
 func (host *goLanguageHost) loadGomod(moduleDir string) (*modfile.File, error) {
-	path := filepath.Join(moduleDir, "go.mod")
+	projectRootDir, err := findGoMod(moduleDir)
+	path := filepath.Join(projectRootDir, "go.mod")
 	body, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
