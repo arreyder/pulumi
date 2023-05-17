@@ -342,6 +342,16 @@ func TestPluginsAndDependencies_moduleMode(t *testing.T) {
 	testPluginsAndDependencies(t, filepath.Join(root, "prog"))
 }
 
+func TestPluginsAndDependencies_goModInParent(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	require.NoError(t,
+		fsutil.CopyFile(root, filepath.Join("testdata", "sample"), nil),
+		"copy test data for subdir test")
+
+	testPluginsAndDependencies(t, filepath.Join(root, "project-subdir/stack"))
+}
+
 // Test for https://github.com/pulumi/pulumi/issues/12526.
 // Validates that if a Pulumi program has vendored its dependencies,
 // the language host can still find the plugin and run the program.
